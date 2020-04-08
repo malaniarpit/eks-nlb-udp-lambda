@@ -1,0 +1,45 @@
+service: nlb-eks-udp-lambda
+
+provider:
+  name: aws
+  runtime: python3.8
+  memorySize: 256
+  timeout: 60
+  logRetentionInDays: 7
+
+  environment:
+    EKS_ENDPOINT_URL: EKS_ENDPOINT_URL
+    EKS_BEARER_TOKEN: EKS_BEARER_TOKEN
+    AWS_NLB_ARN: arn:aws:elasticloadbalancing:us-east-1:ZZZZZZZZZZ:loadbalancer/net/YYYYYYYYYY/XXXXXXXXXX
+    AWS_NLB_VPC: vpc-XXXXXXXXXX
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "elasticloadbalancing:CreateTargetGroup"
+        - "elasticloadbalancing:RegisterTargets"
+        - "elasticloadbalancing:DescribeListeners"
+        - "elasticloadbalancing:CreateListener"
+      Resource:
+          - "*"
+    - Effect: "Allow"
+      Action:
+        - "logs:CreateLogGroup"
+        - "logs:CreateLogStream"
+        - "logs:PutLogEvents"
+        - "logs:GetLogEvents"
+      Resource:
+          - "arn:aws:logs:*:*:*"
+
+functions:
+  handle:
+    handler: handler.handle
+    events:
+      - schedule: rate(5 minutes)
+
+plugins:
+   - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+     dockerizePip: non-linux
